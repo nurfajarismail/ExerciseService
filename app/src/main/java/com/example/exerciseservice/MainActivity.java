@@ -44,6 +44,9 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        SongAdapter songAdt = new SongAdapter(this, songList);
+        list.setAdapter(songAdt);
+
     }
 
     @Override
