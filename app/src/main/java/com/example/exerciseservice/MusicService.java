@@ -1,12 +1,15 @@
 package com.example.exerciseservice;
 
 import android.app.Service;
+import android.content.ContentUris;
 import android.content.Intent;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Binder;
 import android.os.IBinder;
 import android.os.PowerManager;
+import android.util.Log;
 
 import androidx.annotation.Nullable;
 
@@ -60,8 +63,6 @@ public class MusicService extends Service implements
 
 
 
-
-
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
@@ -73,6 +74,27 @@ public class MusicService extends Service implements
         player.stop();
         player.release();
         return false;
+    }
+
+    public void playSong() {
+        //play a song
+        player.reset();
+        //get song
+        Song playSong = songs.get(songPosn);
+        songTitle = playSong.getTitle();
+//get id
+        long currSong = playSong.getID();
+//set uri
+        Uri trackUri = ContentUris.withAppendedId(
+                android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                currSong);
+        try {
+            player.setDataSource(getApplicationContext(), trackUri);
+        } catch (Exception e) {
+            Log.e("MUSIC SERVICE", "Error setting data source", e);
+        }
+        player.prepareAsync();
+
     }
 
     @Override
