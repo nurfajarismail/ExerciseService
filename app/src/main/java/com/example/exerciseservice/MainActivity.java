@@ -6,7 +6,6 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import android.Manifest;
-import android.app.Activity;
 import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -15,58 +14,36 @@ import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.IBinder;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.MediaController;
-import android.widget.Toast;
-
-import com.karumi.dexter.Dexter;
-import com.karumi.dexter.PermissionToken;
-import com.karumi.dexter.listener.PermissionDeniedResponse;
-import com.karumi.dexter.listener.PermissionGrantedResponse;
-import com.karumi.dexter.listener.PermissionRequest;
-import com.karumi.dexter.listener.single.PermissionListener;
-
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
 public class MainActivity extends AppCompatActivity implements MediaController.MediaPlayerControl {
 
-
     private ListView list;
     private ArrayList<Song> songList;
-
     private MusicService musicSrv;
     private Intent playIntent;
     private boolean musicBound = false;
-
     private MusicController controller;
     private String songTitle = "";
     private static final int NOTIFY_ID = 1;
     private boolean paused = false, playbackPaused = false;
-
     private static final int STORAGE_PERMISSION_CODE = 101;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         // Here, thisActivity is the current activity
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        checkPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE,STORAGE_PERMISSION_CODE);
-
-
-
+        checkPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE, STORAGE_PERMISSION_CODE);
 
 
     }
@@ -104,9 +81,7 @@ public class MainActivity extends AppCompatActivity implements MediaController.M
                 .onRequestPermissionsResult(requestCode,
                         permissions,
                         grantResults);
-
         if (requestCode == STORAGE_PERMISSION_CODE) {
-
             if (grantResults.length > 0
                     && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 list = (ListView) findViewById(R.id.song_list);
@@ -117,19 +92,14 @@ public class MainActivity extends AppCompatActivity implements MediaController.M
                         return a.getTitle().compareTo(b.getTitle());
                     }
                 });
-
                 SongAdapter songAdt = new SongAdapter(this, songList);
                 list.setAdapter(songAdt);
                 setController();
-
             } else {
-
                 finish();
             }
         }
     }
-
-
 
 
     private ServiceConnection musicConnection = new ServiceConnection() {
