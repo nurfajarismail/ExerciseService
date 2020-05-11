@@ -1,6 +1,9 @@
 package com.example.exerciseservice;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import android.Manifest;
 import android.app.Activity;
@@ -9,17 +12,21 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.MediaController;
+import android.widget.Toast;
 
 import com.karumi.dexter.Dexter;
 import com.karumi.dexter.PermissionToken;
@@ -35,45 +42,101 @@ import java.util.Comparator;
 
 public class MainActivity extends AppCompatActivity implements MediaController.MediaPlayerControl {
 
+
     private ListView list;
     private ArrayList<Song> songList;
 
     private MusicService musicSrv;
     private Intent playIntent;
-    private boolean musicBound=false;
+    private boolean musicBound = false;
 
     private MusicController controller;
-    private String songTitle="";
-    private static final int NOTIFY_ID=1;
-    private boolean paused=false, playbackPaused=false;
+    private String songTitle = "";
+    private static final int NOTIFY_ID = 1;
+    private boolean paused = false, playbackPaused = false;
 
+    private static final int STORAGE_PERMISSION_CODE = 101;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // Here, thisActivity is the current activity
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        checkPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE,STORAGE_PERMISSION_CODE);
 
-        list = (ListView) findViewById(R.id.song_list);
-        songList = new ArrayList<Song>();
-        getSongList();
-        Collections.sort(songList, new Comparator<Song>() {
-            public int compare(Song a, Song b) {
-                return a.getTitle().compareTo(b.getTitle());
-            }
-        });
 
-        SongAdapter songAdt = new SongAdapter(this, songList);
-        list.setAdapter(songAdt);
 
-        setController();
+
 
     }
 
-    private ServiceConnection musicConnection = new ServiceConnection(){
+
+    public void checkPermission(String permission, int requestCode) {
+        if (ContextCompat.checkSelfPermission(MainActivity.this, permission)
+                == PackageManager.PERMISSION_DENIED) {
+
+            // Requesting the permission
+            ActivityCompat.requestPermissions(MainActivity.this,
+                    new String[]{permission},
+                    requestCode);
+        } else {
+            list = (ListView) findViewById(R.id.song_list);
+            songList = new ArrayList<Song>();
+            getSongList();
+            Collections.sort(songList, new Comparator<Song>() {
+                public int compare(Song a, Song b) {
+                    return a.getTitle().compareTo(b.getTitle());
+                }
+            });
+
+            SongAdapter songAdt = new SongAdapter(this, songList);
+            list.setAdapter(songAdt);
+            setController();
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        super
+                .onRequestPermissionsResult(requestCode,
+                        permissions,
+                        grantResults);
+
+        if (requestCode == STORAGE_PERMISSION_CODE) {
+
+            if (grantResults.length > 0
+                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                list = (ListView) findViewById(R.id.song_list);
+                songList = new ArrayList<Song>();
+                getSongList();
+                Collections.sort(songList, new Comparator<Song>() {
+                    public int compare(Song a, Song b) {
+                        return a.getTitle().compareTo(b.getTitle());
+                    }
+                });
+
+                SongAdapter songAdt = new SongAdapter(this, songList);
+                list.setAdapter(songAdt);
+                setController();
+
+            } else {
+
+                finish();
+            }
+        }
+    }
+
+
+
+
+    private ServiceConnection musicConnection = new ServiceConnection() {
 
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            MusicService.MusicBinder binder = (MusicService.MusicBinder)service;
+            MusicService.MusicBinder binder = (MusicService.MusicBinder) service;
             //get service
             musicSrv = binder.getService();
             //pass list
@@ -91,7 +154,7 @@ public class MainActivity extends AppCompatActivity implements MediaController.M
     @Override
     protected void onStart() {
         super.onStart();
-        if(playIntent==null){
+        if (playIntent == null) {
             playIntent = new Intent(this, MusicService.class);
             bindService(playIntent, musicConnection, Context.BIND_AUTO_CREATE);
             startService(playIntent);
@@ -99,30 +162,32 @@ public class MainActivity extends AppCompatActivity implements MediaController.M
     }
 
     @Override
-    protected void onResume(){
+    protected void onResume() {
         super.onResume();
-        if(paused){
+        if (paused) {
             setController();
-            paused=false;
+            paused = false;
         }
     }
+
     @Override
-    protected void onPause(){
+    protected void onPause() {
         super.onPause();
-        paused=true;
+        paused = true;
     }
+
     @Override
     protected void onStop() {
         controller.hide();
         super.onStop();
     }
 
-    public void songPicked(View view){
+    public void songPicked(View view) {
         musicSrv.setSong(Integer.parseInt(view.getTag().toString()));
         musicSrv.playSong();
-        if(playbackPaused){
+        if (playbackPaused) {
             setController();
-            playbackPaused=false;
+            playbackPaused = false;
         }
         controller.show(0);
     }
@@ -170,7 +235,7 @@ public class MainActivity extends AppCompatActivity implements MediaController.M
                 break;
             case R.id.action_end:
                 stopService(playIntent);
-                musicSrv=null;
+                musicSrv = null;
                 System.exit(0);
                 break;
         }
@@ -181,11 +246,11 @@ public class MainActivity extends AppCompatActivity implements MediaController.M
     @Override
     protected void onDestroy() {
         stopService(playIntent);
-        musicSrv=null;
+        musicSrv = null;
         super.onDestroy();
     }
 
-    private void setController(){
+    private void setController() {
         controller = new MusicController(this);
 
         controller.setPrevNextListeners(new View.OnClickListener() {
@@ -207,20 +272,20 @@ public class MainActivity extends AppCompatActivity implements MediaController.M
 
 
     //play next
-    private void playNext(){
+    private void playNext() {
         musicSrv.playNext();
-        if(playbackPaused){
+        if (playbackPaused) {
             setController();
-            playbackPaused=false;
+            playbackPaused = false;
         }
         controller.show(0);
     }
 
-    private void playPrev(){
+    private void playPrev() {
         musicSrv.playPrev();
-        if(playbackPaused){
+        if (playbackPaused) {
             setController();
-            playbackPaused=false;
+            playbackPaused = false;
         }
         controller.show(0);
     }
@@ -236,20 +301,20 @@ public class MainActivity extends AppCompatActivity implements MediaController.M
     @Override
     public void pause() {
 
-        playbackPaused=true;
+        playbackPaused = true;
         musicSrv.pausePlayer();
     }
 
     @Override
     public int getDuration() {
-        if(musicSrv!=null && musicBound && musicSrv.isPng())
+        if (musicSrv != null && musicBound && musicSrv.isPng())
             return musicSrv.getDur();
         else return 0;
     }
 
     @Override
     public int getCurrentPosition() {
-        if(musicSrv!=null && musicBound && musicSrv.isPng())
+        if (musicSrv != null && musicBound && musicSrv.isPng())
             return musicSrv.getPosn();
         else return 0;
     }
@@ -262,7 +327,7 @@ public class MainActivity extends AppCompatActivity implements MediaController.M
 
     @Override
     public boolean isPlaying() {
-        if(musicSrv!=null && musicBound)
+        if (musicSrv != null && musicBound)
             return musicSrv.isPng();
         return false;
     }
