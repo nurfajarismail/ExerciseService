@@ -39,11 +39,24 @@ public class MainActivity extends AppCompatActivity implements MediaController.M
     private static final int STORAGE_PERMISSION_CODE = 101;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        // Here, thisActivity is the current activity
+
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         checkPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE, STORAGE_PERMISSION_CODE);
+
+        list = (ListView) findViewById(R.id.song_list);
+        songList = new ArrayList<Song>();
+        getSongList();
+        Collections.sort(songList, new Comparator<Song>() {
+            public int compare(Song a, Song b) {
+                return a.getTitle().compareTo(b.getTitle());
+            }
+        });
+
+        SongAdapter songAdt = new SongAdapter(this, songList);
+        list.setAdapter(songAdt);
+        setController();
 
 
     }
@@ -66,7 +79,6 @@ public class MainActivity extends AppCompatActivity implements MediaController.M
                     return a.getTitle().compareTo(b.getTitle());
                 }
             });
-
             SongAdapter songAdt = new SongAdapter(this, songList);
             list.setAdapter(songAdt);
             setController();

@@ -42,6 +42,7 @@ public class MusicService extends Service implements
 //create player
         player = new MediaPlayer();
         rand = new Random();
+        // initMusicPlayer();
     }
 
     public void initMusicPlayer() {
@@ -137,10 +138,10 @@ public class MusicService extends Service implements
                 .setTicker(songTitle)
                 .setOngoing(true)
                 .setContentTitle("Playing")
-                .setContentText(songTitle);
+  .setContentText(songTitle);
         Notification not = builder.build();
 
-        startForeground(NOTIFY_ID, not);
+        //  startForeground(NOTIFY_ID, not);
 
     }
 
