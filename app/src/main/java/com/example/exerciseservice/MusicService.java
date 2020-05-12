@@ -42,7 +42,7 @@ public class MusicService extends Service implements
 //create player
         player = new MediaPlayer();
         rand = new Random();
-        // initMusicPlayer();
+        initMusicPlayer();
     }
 
     public void initMusicPlayer() {
